@@ -1,0 +1,137 @@
+[
+  {
+    "name": "Аврора Таро",
+    "type": "tarot",
+    "emoji": "🔮",
+    "price": "1500₽",
+    "experience": "5 лет",
+    "description": "Расклады на любовь, отношения и жизненные ситуации.",
+    "telegram": "aurora_tarot",
+    "rating": "4.9",
+    "country": "Таиланд",
+    "online": true,
+    "vip": true,
+    "clients": 214,
+    "response": "5 минут",
+    "photo": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800"
+  },
+
+  {
+    "name": "Луна Астролог",
+    "type": "astrology",
+    "emoji": "⭐",
+    "price": "2500₽",
+    "experience": "8 лет",
+    "description": "Натальные карты и совместимость.",
+    "telegram": "luna_astrology",
+    "rating": "4.8",
+    "country": "Польша",
+    "online": true,
+    "vip": false,
+    "clients": 173,
+    "response": "10 минут",
+    "photo": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=800"
+  },
+
+  {
+    "name": "Мастер Рун",
+    "type": "runes",
+    "emoji": "🪬",
+    "price": "1800₽",
+    "experience": "4 года",
+    "description": "Рунические практики и энергетические чистки.",
+    "telegram": "rune_master",
+    "rating": "4.7",
+    "country": "США",
+    "online": false,
+    "vip": false,
+    "clients": 98,
+    "response": "15 минут",
+    "photo": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=800"
+  },
+
+  {
+    "name": "Энергия Света",
+    "type": "energy",
+    "emoji": "🧘",
+    "price": "3000₽",
+    "experience": "10 лет",
+    "description": "Чистка энергетики, медитации и восстановление.",
+    "telegram": "energy_light",
+    "rating": "5.0",
+    "country": "Таиланд",
+    "online": true,
+    "vip": true,
+    "clients": 312,
+    "response": "3 минуты",
+    "photo": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=800"
+  },
+
+  {
+    "name": "София Таро",
+    "type": "tarot",
+    "emoji": "🔮",
+    "price": "2200₽",
+    "experience": "7 лет",
+    "description": "Кармические расклады и анализ отношений.",
+    "telegram": "sofia_tarot",
+    "rating": "4.9",
+    "country": "Германия",
+    "online": true,
+    "vip": false,
+    "clients": 189,
+    "response": "7 минут",
+    "photo": "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=800"
+  },
+
+  {
+    "name": "Космо Астролог",
+    "type": "astrology",
+    "emoji": "⭐",
+    "price": "2800₽",
+    "experience": "12 лет",
+    "description": "Полный астрологический разбор личности.",
+    "telegram": "cosmo_astrology",
+    "rating": "5.0",
+    "country": "Франция",
+    "online": true,
+    "vip": true,
+    "clients": 401,
+    "response": "2 минуты",
+    "photo": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=800"
+  },
+
+  {
+    "name": "Норд Руны",
+    "type": "runes",
+    "emoji": "🪬",
+    "price": "1900₽",
+    "experience": "6 лет",
+    "description": "Скандинавские руны и защитные практики.",
+    "telegram": "nord_runes",
+    "rating": "4.6",
+    "country": "Норвегия",
+    "online": false,
+    "vip": false,
+    "clients": 120,
+    "response": "20 минут",
+    "photo": "https://images.unsplash.com/photo-1504593811423-6dd665756598?q=80&w=800"
+  },
+
+  {
+    "name": "Медитация Души",
+    "type": "energy",
+    "emoji": "🧘",
+    "price": "3500₽",
+    "experience": "11 лет",
+    "description": "Энергетические практики и работа с тревожностью.",
+    "telegram": "soul_energy",
+    "rating": "4.9",
+    "country": "Бали",
+    "online": true,
+    "vip": true,
+    "clients": 267,
+    "response": "4 минуты",
+    "photo": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800"
+  }
+]
