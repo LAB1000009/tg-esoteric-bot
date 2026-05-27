@@ -5,9 +5,16 @@ const OpenAI = require("openai");
 const db = require("./database");
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+
+let openai = null;
+
+if (process.env.OPENAI_API_KEY) {
+
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  });
+
+}
 
 const registrationState = {};
 const userReviewState = {};
