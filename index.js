@@ -97,6 +97,20 @@ function showExperts(ctx, type) {
 
       list.forEach((s) => {
 
+        db.run(
+  `
+  INSERT INTO profile_views (
+    specialist_id,
+    viewer_id
+  )
+  VALUES (?, ?)
+  `,
+  [
+    s.id,
+    ctx.from.id
+  ]
+);
+
         const buttons = [
           [
             Markup.button.url(
@@ -148,12 +162,36 @@ function showExperts(ctx, type) {
           [s.id]
         );
 
-        ctx.replyWithPhoto(
-          {
-            url: s.photo
-          },
-          {
-            caption:
+        db.get(
+  `
+  SELECT COUNT(*) as views
+  FROM profile_views
+  WHERE specialist_id = ?
+  `,
+  [row.id],
+  (err, viewsData) => {
+
+    db.get(
+  `
+  SELECT COUNT(*) as favs
+  FROM favorites
+  WHERE specialist_id = ?
+  `,
+  [s.id],
+  (err, favData) => {
+
+    const views =
+      viewsData?.views || 0;
+
+    const favs =
+      favData?.favs || 0;
+
+    ctx.replyWithPhoto(
+      {
+        url: s.photo
+      },
+      {
+        caption:
 `${s.emoji} ${s.name}
 
 ${vip}
@@ -165,6 +203,9 @@ ${vip}
 🌍 Страна: ${s.country}
 🧠 Опыт: ${s.experience}
 
+👁 Просмотров: ${views}
+❤️ В избранном: ${favs}
+
 👥 Клиентов: ${s.clients}
 ⚡ Ответ: ${s.response}
 
@@ -172,12 +213,13 @@ ${online}
 
 ${s.description}`,
 
-            ...Markup.inlineKeyboard(buttons)
+        ...Markup.inlineKeyboard(buttons)
 
-          }
-        );
+      }
+    );
 
-      });
+  }
+);
 
     }
   );

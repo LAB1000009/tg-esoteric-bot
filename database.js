@@ -72,6 +72,16 @@ db.serialize(() => {
     )
   `);
 
+  db.run(`
+  CREATE TABLE IF NOT EXISTS profile_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    specialist_id INTEGER,
+    viewer_id TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
 });
 
 module.exports = db;
