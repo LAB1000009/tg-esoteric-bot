@@ -3,7 +3,7 @@ require("dotenv").config();
 const { Telegraf, Markup } = require("telegraf");
 const OpenAI = require("openai");
 const db = require("./database");
-
+const path = require("path");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 let openai = null;
@@ -22,33 +22,104 @@ const aiMatchState = {};
 const editState = {};
 
 function menu() {
-  return Markup.inlineKeyboard([
-    [Markup.button.callback("🏠 Главное меню", "home")],
-    [Markup.button.callback("👤 Мой профиль", "my_profile")],
-    [Markup.button.callback("🤖 AI Подбор специалиста", "ai_match")],
-    [Markup.button.callback("📂 Избранное", "favorites")],
-    [Markup.button.callback("🔮 Тарологи", "tarot")],
-    [Markup.button.callback("⭐ Астрологи", "astrology")],
-    [Markup.button.callback("🪬 Руны", "runes")],
-    [Markup.button.callback("🧘 Энергопрактики", "energy")],
-    [Markup.button.callback("🏆 VIP Эксперты", "vip")],
-    [Markup.button.callback("🤖 AI Расклад", "ai")],
-    [Markup.button.callback("📝 Стать специалистом", "register")],
-    [Markup.button.callback("🛡 Гарантия безопасности", "safe")]
-  ]);
+ return Markup.inlineKeyboard([
+
+  [
+    Markup.button.callback(
+      "🏠 Главное меню",
+      "home"
+    )
+  ],
+
+  [
+    Markup.button.callback(
+      "🤖 AI Подбор специалиста",
+      "ai_match"
+    )
+  ],
+
+  [
+    Markup.button.callback(
+      "❤️ Отношения",
+      "relationships"
+    ),
+    Markup.button.callback(
+      "💰 Финансы",
+      "finance"
+    )
+  ],
+
+  [
+    Markup.button.callback(
+      "🩺 Здоровье",
+      "health"
+    ),
+    Markup.button.callback(
+      "👶 Дети и семья",
+      "family"
+    )
+  ],
+
+  [
+    Markup.button.callback(
+      "🌌 Многопрофильные",
+      "universal"
+    )
+  ],
+
+  [
+    Markup.button.callback(
+      "🚀 Продвигаемые практики",
+      "vip"
+    )
+  ],
+
+  [
+    Markup.button.callback(
+      " ",
+      "empty"
+    )
+  ],
+
+  [
+    Markup.button.callback(
+      "📂 Избранное",
+      "favorites"
+    ),
+    Markup.button.callback(
+      "👤 Мой профиль",
+      "my_profile"
+    )
+  ],
+
+  [
+    Markup.button.callback(
+      "🎓 Стать практиком",
+      "register"
+    )
+  ],
+
+  [
+    Markup.button.callback(
+      "🛡 Безопасность",
+      "safe"
+    )
+  ]
+
+]);
 }
 
 bot.start(async (ctx) => {
 
   await ctx.replyWithPhoto(
     {
-      url: "https://images.unsplash.com/photo-1518562180175-34a163b1a9a6?q=80&w=1200"
+      source: path.join(__dirname, "assets", "menu.png")
     },
     {
       caption:
-`🔮 Esoteric Hub Ultimate
+`🔮 Остеопатия Души Мастера
 
-Платформа проверенных эзотерических специалистов.
+Платформа практиков школы «Остеопатия Души».
 
 ✅ Ручная модерация анкет
 ✅ Проверенные отзывы
@@ -57,10 +128,11 @@ bot.start(async (ctx) => {
 
 Найдите своего специалиста:
 
-• Тарологи
-• Астрологи
-• Руны
-• Энергопрактики
+• Отношения
+• Финансы и реализация
+• Здоровье и тело
+• Дети и семья
+• Многопрофильный практик
 
 👇 Выберите категорию`,
       ...menu()
@@ -82,6 +154,7 @@ function showExperts(ctx, type) {
     WHERE specialists.type = ?
     AND specialists.status = 'approved'
     GROUP BY specialists.id
+    ORDER BY specialists.vip DESC, specialists.id DESC
     `,
     [type],
     (err, list) => {
@@ -97,19 +170,28 @@ function showExperts(ctx, type) {
 
       list.forEach((s) => {
 
-        // db.run(
-        //   `
-        //   INSERT INTO profile_views (
-        //     specialist_id,
-        //     viewer_id
-        //   )
-        //   VALUES (?, ?)
-        //   `,
-        //   [
-        //     s.id,
-        //     ctx.from.id
-        //   ]
-        // );
+        db.run(
+          `
+          INSERT INTO profile_views (
+            specialist_id,
+            viewer_id
+          )
+          VALUES (?, ?)
+          `,
+          [
+            s.id,
+            ctx.from.id
+          ]
+        );
+
+        db.run(
+        `
+        UPDATE specialists
+        SET views = views + 1
+        WHERE id = ?
+        `,
+        [s.id]
+      );
 
         const buttons = [
           [
@@ -142,7 +224,7 @@ function showExperts(ctx, type) {
 
           buttons.push([
             Markup.button.callback(
-              "🔥 Купить VIP",
+              "🚀 Продвижение анкеты",
               `buy_vip_${s.id}`
             )
           ]);
@@ -154,8 +236,10 @@ function showExperts(ctx, type) {
           : "⚫ Не в сети";
 
         const vip = Number(s.vip) === 1
-          ? "🔥 VIP Эксперт"
-          : "";
+        ? `🚀 Продвигаемый практик
+
+      ━━━━━━━━━━━━━━`
+        : "";
 
         db.get(
   `
@@ -175,16 +259,18 @@ function showExperts(ctx, type) {
       },
       {
         caption:
-`${s.emoji} ${s.name}
+`${vip}
 
-${vip}
-✅ Проверенный специалист
+${s.emoji} ${s.name}
+
+✅ Практик школы
 🛡 Проверен администрацией
 
 ⭐ Рейтинг: ${s.avg_rating || "Нет оценок"}
 💰 Цена: ${s.price}
 🌍 Страна: ${s.country}
 🧠 Опыт: ${s.experience}
+🎓 Сертификаты школы: есть
 
 ❤️ В избранном: ${favs}
 
@@ -259,26 +345,30 @@ bot.action(/reg_(.+)/, (ctx) => {
 
   reg.type = type;
 
-  if (type === "tarot") {
-    reg.emoji = "🔮";
-  }
+  if (type === "relationships") {
+  reg.emoji = "❤️";
+}
 
-  if (type === "astrology") {
-    reg.emoji = "⭐";
-  }
+if (type === "finance") {
+  reg.emoji = "💰";
+}
 
-  if (type === "runes") {
-    reg.emoji = "🪬";
-  }
+if (type === "health") {
+  reg.emoji = "🩺";
+}
 
-  if (type === "energy") {
-    reg.emoji = "🧘";
-  }
+if (type === "family") {
+  reg.emoji = "👶";
+}
+
+if (type === "universal") {
+  reg.emoji = "🌌";
+}
 
   reg.step = "description";
 
   ctx.reply(
-    `📝 Опишите себя
+    `📝 Расскажите о себе и своей практике
     
     ━━━━━━━━━━━━━━
        ❌ /cancel — отмена`
@@ -316,24 +406,29 @@ bot.action(/reject_(.+)/, (ctx) => {
 
 });
 
-bot.action("tarot", (ctx) => {
+bot.action("relationships", (ctx) => {
   ctx.answerCbQuery();
-  showExperts(ctx, "tarot");
+  showExperts(ctx, "relationships");
 });
 
-bot.action("astrology", (ctx) => {
+bot.action("finance", (ctx) => {
   ctx.answerCbQuery();
-  showExperts(ctx, "astrology");
+  showExperts(ctx, "finance");
 });
 
-bot.action("runes", (ctx) => {
+bot.action("health", (ctx) => {
   ctx.answerCbQuery();
-  showExperts(ctx, "runes");
+  showExperts(ctx, "health");
 });
 
-bot.action("energy", (ctx) => {
+bot.action("family", (ctx) => {
   ctx.answerCbQuery();
-  showExperts(ctx, "energy");
+  showExperts(ctx, "family");
+});
+
+bot.action("universal", (ctx) => {
+  ctx.answerCbQuery();
+  showExperts(ctx, "universal");
 });
 
 bot.action("vip", (ctx) => {
@@ -343,8 +438,8 @@ bot.action("vip", (ctx) => {
   db.all(
     `
     SELECT
-    specialists.*,
-    ROUND(AVG(reviews.stars), 1) as avg_rating
+      specialists.*,
+      ROUND(AVG(reviews.stars), 1) as avg_rating
     FROM specialists
     LEFT JOIN reviews
     ON specialists.id = reviews.specialist_id
@@ -352,29 +447,81 @@ bot.action("vip", (ctx) => {
     GROUP BY specialists.id
     `,
     [],
-    (err, vipExperts) => {
+    (err, list) => {
 
       if (err) {
         return ctx.reply("Ошибка базы данных");
       }
 
-      vipExperts.forEach((s) => {
+      if (!list.length) {
+        return ctx.reply(
+          "🚀 Продвигаемых практиков пока нет"
+        );
+      }
 
-        ctx.reply(
-`🏆 VIP Эксперт
+      list.forEach((s) => {
+
+        const online = s.online
+          ? "🟢 Сейчас онлайн"
+          : "⚫ Не в сети";
+
+        db.get(
+          `
+          SELECT COUNT(*) as favs
+          FROM favorites
+          WHERE specialist_id = ?
+          `,
+          [s.id],
+          (err, favData) => {
+
+            const favs =
+              favData?.favs || 0;
+
+            ctx.replyWithPhoto(
+              {
+                url: s.photo
+              },
+              {
+                caption:
+`🚀 Продвигаемый практик
 
 ${s.emoji} ${s.name}
-⭐ ${s.avg_rating || "Нет оценок"}
-💰 ${s.price}`,
-          {
-            ...Markup.inlineKeyboard([
-              [
-                Markup.button.url(
-                  "📩 Написать",
-                  `https://t.me/${s.telegram}`
-                )
-              ]
-            ])
+
+🎓 Сертифицированный практик
+🛡 Проверен школой
+
+⭐ Рейтинг: ${s.avg_rating || "Нет оценок"}
+❤️ В избранном: ${favs}
+
+💰 Стоимость: ${s.price}
+🌍 Страна: ${s.country}
+🧠 Опыт: ${s.experience}
+
+👥 Практик помог: ${s.clients}
+⚡ Ответ: ${s.response}
+
+${online}
+
+${s.description}`,
+
+                ...Markup.inlineKeyboard([
+                  [
+                    Markup.button.url(
+                      "📩 Связаться",
+                      `https://t.me/${s.telegram}`
+                    )
+                  ],
+                  [
+                    Markup.button.callback(
+                      "❤️ В избранное",
+                      `fav_${s.id}`
+                    )
+                  ]
+                ])
+
+              }
+            );
+
           }
         );
 
@@ -385,35 +532,35 @@ ${s.emoji} ${s.name}
 
 });
 
-bot.action("ai", (ctx) => {
+// bot.action("ai", (ctx) => {
 
-  ctx.answerCbQuery();
+//   ctx.answerCbQuery();
 
-  ctx.reply(
-`🤖 AI Расклад
+//   ctx.reply(
+// `🤖 AI Расклад
 
-✨ Карты показывают:
+// ✨ Карты показывают:
 
-❤️ Скоро вас ждут перемены в личной жизни
+// ❤️ Скоро вас ждут перемены в личной жизни
 
-💰 Финансовая ситуация улучшится
+// 💰 Финансовая ситуация улучшится
 
-🔮 Очень важно доверять своей интуиции
+// 🔮 Очень важно доверять своей интуиции
 
-⚡ Сейчас сильный период для новых решений`,
-    {
-      ...Markup.inlineKeyboard([
-        [
-          Markup.button.callback(
-            "🔮 Найти специалиста",
-            "tarot"
-          )
-        ]
-      ])
-    }
-  );
+// ⚡ Сейчас сильный период для новых решений`,
+//     {
+//       ...Markup.inlineKeyboard([
+//         [
+//           Markup.button.callback(
+//             "🌌 Найти практикующего",
+//             "universal"
+//           )
+//         ]
+//       ])
+//     }
+//   );
 
-});
+// });
 
 bot.action("safe", (ctx) => {
 
@@ -513,25 +660,88 @@ bot.action(/reviews_(.+)/, (ctx) => {
 
 });
 
-bot.action(/buy_vip_(.+)/, (ctx) => {
+bot.action(/buy_vip_(.+)/, async (ctx) => {
 
   const specialistId = ctx.match[1];
 
-  db.run(`
-    INSERT INTO vip_requests (
-      specialist_id,
-      created_at
-    )
-    VALUES (?, datetime('now'))
-  `, [
-    specialistId
-  ]);
+  db.get(
+    `
+    SELECT *
+    FROM specialists
+    WHERE id = ?
+    `,
+    [specialistId],
+    async (err, specialist) => {
 
-  ctx.reply(
-`🔥 Заявка на VIP отправлена.
+      if (!specialist) {
 
-Администратор свяжется с вами для оплаты.`
+        return ctx.reply(
+          "Практик не найден"
+        );
+
+      }
+
+      if (Number(specialist.vip) === 1) {
+
+        return ctx.reply(
+`🌟 У вас уже активирован статус
+старшего практика 😄`
+        );
+
+      }
+
+      await ctx.reply(
+`🚀 Продвижение анкеты
+
+После активации:
+
+✅ Анкета выше в каталоге
+✅ Больше просмотров
+✅ Больше обращений
+✅ Попадание в раздел
+«Продвигаемые практики»
+
+Стоимость:
+1000 Telegram Stars ⭐`,
+  Markup.inlineKeyboard([
+    [
+      Markup.button.callback(
+        "💳 Оплатить Stars",
+        `pay_vip_${specialistId}`
+      )
+    ]
+  ])
+);
+
+    }
   );
+
+});
+
+bot.action(/pay_vip_(.+)/, async (ctx) => {
+
+  const specialistId = ctx.match[1];
+
+  await ctx.replyWithInvoice({
+    title: "🚀 Продвижение анкеты",
+
+    description:
+      "Продвиньте анкету и получите больше клиентов.",
+
+    payload: `vip_${specialistId}`,
+
+    provider_token: "",
+
+    currency: "XTR",
+
+    prices: [
+      {
+        label: "🚀 Продвигаемый практик",
+        amount: 10000
+      }
+    ]
+
+  });
 
 });
 
@@ -569,6 +779,7 @@ ${s.emoji} ${s.name}
 📂 Категория: ${s.type}
 🌍 Страна: ${s.country}
 🧠 Опыт: ${s.experience}
+🎓 Сертификаты школы: есть
 💰 Цена: ${s.price}
 
 📄 Описание:
@@ -672,7 +883,7 @@ bot.command("stats", (ctx) => {
 `📊 Статистика платформы
 
 👥 Экспертов: ${rows.length}
-🏆 VIP Экспертов: ${vipCount}`
+🏆 Старших практиков: ${vipCount}`
       );
 
     }
@@ -700,7 +911,7 @@ bot.command("vip_requests", (ctx) => {
     rows.forEach((r) => {
 
       ctx.reply(
-`🔥 VIP заявка
+`🔥 Заявка на продвижение анкеты
 
 ${r.name}
 @${r.telegram}
@@ -729,8 +940,10 @@ bot.hears(/\/vip_(.+)/, (ctx) => {
       }
 
       ctx.reply(
-        "🔥 VIP активирован"
-      );
+`🚀 Продвижение анкеты активировано!
+
+Теперь ваша анкета будет показываться выше в каталоге 😄`
+);
 
     }
   );
@@ -764,8 +977,8 @@ bot.action("my_profile", (ctx) => {
       }
 
       const vip = s.vip
-        ? "🔥 VIP активен"
-        : "❌ VIP не активен";
+        ? "🚀 Продвижение анкеты активно"
+        : "❌ Продвижение анкеты не активно";
 
       db.get(
         `
@@ -797,6 +1010,7 @@ ${s.emoji} ${s.name}
 💰 Цена: ${s.price}
 🌍 Страна: ${s.country}
 🧠 Опыт: ${s.experience}
+🎓 Сертификаты школы: есть
 
 ${vip}
 
@@ -824,7 +1038,7 @@ ${s.description}`,
                 ],
                 [
                   Markup.button.callback(
-                    "🔥 Купить VIP",
+                    "🚀 Продвижение анкеты",
                     `buy_vip_${s.id}`
                   )
                 ]
@@ -891,7 +1105,7 @@ bot.action("ai_match", (ctx) => {
   aiMatchState[ctx.from.id] = true;
 
   ctx.reply(
-    `🤖 AI Подбор
+    `🤖 AI Подбор практикующего
     
     Опишите вашу ситуацию или проблему текстом.
     
@@ -1018,11 +1232,11 @@ bot.action("home", async (ctx) => {
 
   await ctx.replyWithPhoto(
     {
-      url: "https://images.unsplash.com/photo-1518562180175-34a163b1a9a6?q=80&w=1200"
+      source: path.join(__dirname, "assets", "menu.png")
     },
     {
       caption:
-`🔮 Esoteric Hub Ultimate
+`🔮 Остеопатия Души Мастера
 
 Главное меню`,
       ...menu()
@@ -1072,15 +1286,16 @@ bot.on("text", (ctx) => {
   и выбери подходящие категории специалистов.
   
   Варианты:
-  - tarot
-  - astrology
-  - runes
-  - energy
+  - relationships
+  - finance
+  - health
+  - family
+  - universal
   
   Отвечай ТОЛЬКО категориями через запятую.
   
   Пример:
-  tarot,energy`
+  relationships,relationships`
               },
               {
                 role: "user",
@@ -1097,20 +1312,24 @@ bot.on("text", (ctx) => {
   
         let specialists = [];
   
-        if (result.includes("tarot")) {
-          specialists.push("tarot");
+        if (result.includes("relationships")) {
+          specialists.push("relationships");
         }
   
-        if (result.includes("astrology")) {
-          specialists.push("astrology");
+        if (result.includes("finance")) {
+          specialists.push("finance");
         }
   
-        if (result.includes("runes")) {
-          specialists.push("runes");
+        if (result.includes("health")) {
+          specialists.push("health");
         }
   
-        if (result.includes("energy")) {
-          specialists.push("energy");
+        if (result.includes("family")) {
+          specialists.push("family");
+        }
+  
+        if (result.includes("universal")) {
+          specialists.push("universal");
         }
   
         if (!specialists.length) {
@@ -1145,8 +1364,8 @@ bot.on("text", (ctx) => {
           text.includes("финанс")
         ) {
       
-          specialists.push("tarot");
-          specialists.push("astrology");
+          specialists.push("finance");
+          specialists.push("universal");
       
         }
       
@@ -1155,7 +1374,7 @@ bot.on("text", (ctx) => {
           text.includes("любов")
         ) {
       
-          specialists.push("tarot");
+          specialists.push("relationships");
       
         }
       
@@ -1165,7 +1384,7 @@ bot.on("text", (ctx) => {
           text.includes("стресс")
         ) {
       
-          specialists.push("energy");
+          specialists.push("universal");
       
         }
       
@@ -1174,21 +1393,22 @@ bot.on("text", (ctx) => {
           text.includes("судь")
         ) {
       
-          specialists.push("runes");
+          specialists.push("health");
       
         }
       
         if (!specialists.length) {
       
-          specialists.push("tarot");
+          specialists.push("relationships");
       
         }
       
         const names = {
-          tarot: "🔮 Тарологи",
-          astrology: "⭐ Астрологи",
-          runes: "🪬 Руны",
-          energy: "🧘 Энергопрактики"
+          relationships: "❤️ Отношения",
+          finance: "💰 Финансы",
+          health: "🩺 Здоровье",
+          family: "👶 Дети и семья",
+          universal: "🌌 Многопрофильный практик"
         };
         
         ctx.reply(
@@ -1256,14 +1476,15 @@ if (edit) {
       reg.step = "type";
 
       return ctx.reply(
-        "Выберите категорию",
-        Markup.inlineKeyboard([
-          [Markup.button.callback("🔮 Таролог", "reg_tarot")],
-          [Markup.button.callback("⭐ Астролог", "reg_astrology")],
-          [Markup.button.callback("🪬 Руны", "reg_runes")],
-          [Markup.button.callback("🧘 Энергопрактик", "reg_energy")]
-        ])
-      );
+  "🌿 Выберите направление практики",
+  Markup.inlineKeyboard([
+    [Markup.button.callback("❤️ Отношения", "reg_relationships")],
+    [Markup.button.callback("💰 Финансы", "reg_finance")],
+    [Markup.button.callback("🩺 Здоровье", "reg_health")],
+    [Markup.button.callback("👶 Дети и семья", "reg_family")],
+    [Markup.button.callback("🌌 Многопрофильный практик", "reg_universal")]
+  ])
+);
 
     }
 
@@ -1273,7 +1494,7 @@ if (edit) {
       reg.step = "experience";
 
       return ctx.reply(
-        `🧠 Введите опыт работы
+        `🧠 Введите ваш опыт практики
         
         ━━━━━━━━━━━━━━
        ❌ /cancel — отмена`
@@ -1301,7 +1522,7 @@ if (edit) {
       reg.step = "price";
 
       return ctx.reply(
-        `💰 Введите цену
+        `💰 Введите стоимость консультации
         
         ━━━━━━━━━━━━━━
        ❌ /cancel — отмена`
@@ -1371,7 +1592,7 @@ if (edit) {
       delete registrationState[ctx.from.id];
 
       return ctx.reply(
-        "✅ Заявка отправлена на модерацию"
+        "✅ Заявка практикующего отправлена на модерацию"
       );
 
     }
@@ -1460,6 +1681,41 @@ if (edit && edit.type === "photo") {
     ━━━━━━━━━━━━━━
        ❌ /cancel — отмена`
     );
+
+});
+
+bot.on("pre_checkout_query", async (ctx) => {
+  await ctx.answerPreCheckoutQuery(true);
+});
+
+bot.on("successful_payment", (ctx) => {
+
+  const payload =
+    ctx.message.successful_payment.invoice_payload;
+
+  if (payload.startsWith("vip_")) {
+
+    const specialistId =
+      payload.replace("vip_", "");
+
+    db.run(
+      `
+      UPDATE specialists
+      SET vip = 1
+      WHERE id = ?
+      `,
+      [specialistId]
+    );
+
+    ctx.reply(
+`🌟 Оплата прошла успешно!
+
+🚀 Продвижение анкеты активировано!
+
+Теперь ваша анкета будет показываться выше в каталоге 😄`
+    );
+
+  }
 
 });
 
