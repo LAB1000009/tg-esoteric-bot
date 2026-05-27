@@ -98,18 +98,18 @@ function showExperts(ctx, type) {
       list.forEach((s) => {
 
         db.run(
-  `
-  INSERT INTO profile_views (
-    specialist_id,
-    viewer_id
-  )
-  VALUES (?, ?)
-  `,
-  [
-    s.id,
-    ctx.from.id
-  ]
-);
+          `
+          INSERT INTO profile_views (
+            specialist_id,
+            viewer_id
+          )
+          VALUES (?, ?)
+          `,
+          [
+            s.id,
+            ctx.from.id
+          ]
+        );
 
         const buttons = [
           [
@@ -156,42 +156,37 @@ function showExperts(ctx, type) {
         const vip = Number(s.vip) === 1
           ? "🔥 VIP Эксперт"
           : "";
-        
-        db.run(
-          "UPDATE specialists SET views = views + 1 WHERE id = ?",
-          [s.id]
-        );
 
         db.get(
-  `
-  SELECT COUNT(*) as views
-  FROM profile_views
-  WHERE specialist_id = ?
-  `,
-  [row.id],
-  (err, viewsData) => {
+          `
+          SELECT COUNT(*) as views
+          FROM profile_views
+          WHERE specialist_id = ?
+          `,
+          [s.id],
+          (err, viewsData) => {
 
-    db.get(
-  `
-  SELECT COUNT(*) as favs
-  FROM favorites
-  WHERE specialist_id = ?
-  `,
-  [s.id],
-  (err, favData) => {
+            db.get(
+              `
+              SELECT COUNT(*) as favs
+              FROM favorites
+              WHERE specialist_id = ?
+              `,
+              [s.id],
+              (err, favData) => {
 
-    const views =
-      viewsData?.views || 0;
+                const views =
+                  viewsData?.views || 0;
 
-    const favs =
-      favData?.favs || 0;
+                const favs =
+                  favData?.favs || 0;
 
-    ctx.replyWithPhoto(
-      {
-        url: s.photo
-      },
-      {
-        caption:
+                ctx.replyWithPhoto(
+                  {
+                    url: s.photo
+                  },
+                  {
+                    caption:
 `${s.emoji} ${s.name}
 
 ${vip}
@@ -213,13 +208,18 @@ ${online}
 
 ${s.description}`,
 
-        ...Markup.inlineKeyboard(buttons)
+                    ...Markup.inlineKeyboard(buttons)
 
-      }
-    );
+                  }
+                );
 
-  }
-);
+              }
+            );
+
+          }
+        );
+
+      });
 
     }
   );
