@@ -212,16 +212,38 @@ ${s.description}`,
 
 bot.action("register", (ctx) => {
 
-  registrationState[ctx.from.id] = {
-    step: "name"
-  };
+  db.get(
+    `
+    SELECT *
+    FROM specialists
+    WHERE owner_id = ?
+    `,
+    [ctx.from.id],
+    (err, existing) => {
 
-  ctx.reply(
-    `📝 Введите ваше имя
-    
-    ━━━━━━━━━━━━━━
-       ❌ /cancel — отмена`
-    );
+      if (existing) {
+
+        return ctx.reply(
+          "❌ У вас уже есть анкета специалиста"
+        );
+
+      }
+
+      registrationState[ctx.from.id] = {
+        step: "name"
+      };
+
+      ctx.reply(
+`📝 Регистрация специалиста
+
+Введите ваше имя 👇
+
+━━━━━━━━━━━━━━
+❌ /cancel — отмена`
+      );
+
+    }
+  );
 
 });
 
