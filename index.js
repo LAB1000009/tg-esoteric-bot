@@ -97,19 +97,19 @@ function showExperts(ctx, type) {
 
       list.forEach((s) => {
 
-        db.run(
-          `
-          INSERT INTO profile_views (
-            specialist_id,
-            viewer_id
-          )
-          VALUES (?, ?)
-          `,
-          [
-            s.id,
-            ctx.from.id
-          ]
-        );
+        // db.run(
+        //   `
+        //   INSERT INTO profile_views (
+        //     specialist_id,
+        //     viewer_id
+        //   )
+        //   VALUES (?, ?)
+        //   `,
+        //   [
+        //     s.id,
+        //     ctx.from.id
+        //   ]
+        // );
 
         const buttons = [
           [
@@ -158,35 +158,23 @@ function showExperts(ctx, type) {
           : "";
 
         db.get(
-          `
-          SELECT COUNT(*) as views
-          FROM profile_views
-          WHERE specialist_id = ?
-          `,
-          [s.id],
-          (err, viewsData) => {
+  `
+  SELECT COUNT(*) as favs
+  FROM favorites
+  WHERE specialist_id = ?
+  `,
+  [s.id],
+  (err, favData) => {
 
-            db.get(
-              `
-              SELECT COUNT(*) as favs
-              FROM favorites
-              WHERE specialist_id = ?
-              `,
-              [s.id],
-              (err, favData) => {
+    const favs =
+      favData?.favs || 0;
 
-                const views =
-                  viewsData?.views || 0;
-
-                const favs =
-                  favData?.favs || 0;
-
-                ctx.replyWithPhoto(
-                  {
-                    url: s.photo
-                  },
-                  {
-                    caption:
+    ctx.replyWithPhoto(
+      {
+        url: s.photo
+      },
+      {
+        caption:
 `${s.emoji} ${s.name}
 
 ${vip}
@@ -198,7 +186,6 @@ ${vip}
 🌍 Страна: ${s.country}
 🧠 Опыт: ${s.experience}
 
-👁 Просмотров: ${views}
 ❤️ В избранном: ${favs}
 
 👥 Клиентов: ${s.clients}
@@ -208,16 +195,13 @@ ${online}
 
 ${s.description}`,
 
-                    ...Markup.inlineKeyboard(buttons)
+        ...Markup.inlineKeyboard(buttons)
 
-                  }
-                );
+      }
+    );
 
-              }
-            );
-
-          }
-        );
+  }
+);
 
       });
 
@@ -546,6 +530,8 @@ bot.command("pending", (ctx) => {
 
       rows.forEach((s) => {
 
+
+        
         ctx.replyWithPhoto(
           {
             url: s.photo
@@ -759,12 +745,24 @@ bot.action("my_profile", (ctx) => {
         ? "🔥 VIP активен"
         : "❌ VIP не активен";
 
-      ctx.replyWithPhoto(
-        {
-          url: s.photo
-        },
-        {
-          caption:
+      db.get(
+        `
+        SELECT COUNT(*) as favs
+        FROM favorites
+        WHERE specialist_id = ?
+        `,
+        [s.id],
+        (err, favData) => {
+
+          const favs =
+            favData?.favs || 0;
+
+          ctx.replyWithPhoto(
+            {
+              url: s.photo
+            },
+            {
+              caption:
 `👤 Мой профиль
 
 ${s.emoji} ${s.name}
@@ -772,6 +770,7 @@ ${s.emoji} ${s.name}
 ⭐ Рейтинг: ${s.avg_rating || "Нет оценок"}
 
 👁 Просмотров: ${s.views || 0}
+❤️ В избранном: ${favs}
 
 💰 Цена: ${s.price}
 🌍 Страна: ${s.country}
@@ -781,32 +780,37 @@ ${vip}
 
 📄 Описание:
 ${s.description}`,
-...Markup.inlineKeyboard([
-  [
-    Markup.button.callback(
-      "✏ Изменить описание",
-      "edit_description"
-    )
-  ],
-  [
-    Markup.button.callback(
-      "💰 Изменить цену",
-      "edit_price"
-    )
-  ],
-  [
-    Markup.button.callback(
-      "📷 Изменить фото",
-      "edit_photo"
-    )
-  ],
-  [
-    Markup.button.callback(
-      "🔥 Купить VIP",
-      `buy_vip_${s.id}`
-    )
-  ]
-])
+
+              ...Markup.inlineKeyboard([
+                [
+                  Markup.button.callback(
+                    "✏ Изменить описание",
+                    "edit_description"
+                  )
+                ],
+                [
+                  Markup.button.callback(
+                    "💰 Изменить цену",
+                    "edit_price"
+                  )
+                ],
+                [
+                  Markup.button.callback(
+                    "📷 Изменить фото",
+                    "edit_photo"
+                  )
+                ],
+                [
+                  Markup.button.callback(
+                    "🔥 Купить VIP",
+                    `buy_vip_${s.id}`
+                  )
+                ]
+              ])
+
+            }
+          );
+
         }
       );
 
